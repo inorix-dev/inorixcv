@@ -1,0 +1,48 @@
+name: build
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.7, 3.8]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+          poetry install
+
+      - name: Format with Black
+        run: |
+          poetry run black inorixcv/
+          poetry run black tests/
+
+      - name: Lint with mypy
+        run: |
+          poetry run mypy inorixcv/
+          poetry run mypy tests/
+
+      - name: Lint with Flake8
+        run: |
+          poetry run flake8 inorixcv/
+          poetry run flake8 tests/
+
+      - name: Test with pytest
+        run: |
+          poetry run pytest
